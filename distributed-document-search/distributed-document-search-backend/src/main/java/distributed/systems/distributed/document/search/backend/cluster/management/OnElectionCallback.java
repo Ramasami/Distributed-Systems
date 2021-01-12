@@ -2,8 +2,10 @@ package distributed.systems.distributed.document.search.backend.cluster.manageme
 
 import org.apache.zookeeper.KeeperException;
 
+import java.net.URISyntaxException;
+
 public interface OnElectionCallback {
 
-    void onElectedToBeLeader() throws KeeperException, InterruptedException;
+    void onElectedToBeLeader() throws KeeperException, InterruptedException, URISyntaxException;
     void onWorker();
 }

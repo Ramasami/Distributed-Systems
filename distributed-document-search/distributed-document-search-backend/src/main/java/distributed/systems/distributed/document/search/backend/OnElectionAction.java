@@ -1,13 +1,16 @@
 package distributed.systems.distributed.document.search.backend;
 
 import distributed.systems.distributed.document.search.backend.cluster.management.OnElectionCallback;
+import distributed.systems.distributed.document.search.backend.networking.WebClient;
 import distributed.systems.distributed.document.search.backend.networking.WebServer;
 import distributed.systems.distributed.document.search.backend.cluster.management.ServiceRegistry;
 import distributed.systems.distributed.document.search.backend.search.SearchCoordinator;
 import distributed.systems.distributed.document.search.backend.search.SearchWorker;
+import org.apache.http.nio.reactor.IOReactorException;
 import org.apache.zookeeper.KeeperException;
 
 import java.net.InetAddress;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 
 public class OnElectionAction implements OnElectionCallback {
@@ -15,17 +18,19 @@ public class OnElectionAction implements OnElectionCallback {
     private final ServiceRegistry workerRegistry;
     private final ServiceRegistry coordinatorRegistry;
     private WebServer webserver;
+    private WebClient webClient;
     private final int port;
 
-    public OnElectionAction(ServiceRegistry workerRegistry, ServiceRegistry coordinatorRegistry, int port) {
+    public OnElectionAction(ServiceRegistry workerRegistry, ServiceRegistry coordinatorRegistry, int port) throws IOReactorException {
         this.workerRegistry = workerRegistry;
         this.coordinatorRegistry = coordinatorRegistry;
         this.port = port;
+        webClient = new WebClient();
     }
 
 
     @Override
-    public void onElectedToBeLeader() throws KeeperException, InterruptedException {
+    public void onElectedToBeLeader() throws KeeperException, InterruptedException, URISyntaxException {
         workerRegistry.unregisterFromCluster();
         workerRegistry.registerForUpdates();
 
@@ -33,7 +38,7 @@ public class OnElectionAction implements OnElectionCallback {
             webserver.stop();
         }
 
-        SearchCoordinator searchCoordinator = new SearchCoordinator();
+        SearchCoordinator searchCoordinator = new SearchCoordinator(workerRegistry,webClient);
         WebServer webserver = new WebServer(port, searchCoordinator);
         webserver.startServer();
         try {

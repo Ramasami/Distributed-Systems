@@ -3,6 +3,7 @@ package distributed.systems.distributed.document.search.backend.cluster.manageme
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,7 +36,7 @@ public class LeaderElection implements Watcher {
         currentZnodeName = path.replace(ELECTION_NAMESPACE+"/", "");
     }
 
-    public void reelectLeader() throws KeeperException, InterruptedException {
+    public void reelectLeader() throws KeeperException, InterruptedException, URISyntaxException {
         Stat predecessorStat = null;
         String predecessorZnodeName = "";
         while (predecessorStat == null) {
@@ -63,7 +64,7 @@ public class LeaderElection implements Watcher {
             case NodeDeleted:
                 try {
                     reelectLeader();
-                } catch (KeeperException | InterruptedException e) {
+                } catch (KeeperException | InterruptedException | URISyntaxException e) {
                     e.printStackTrace();
                 }
                 break;

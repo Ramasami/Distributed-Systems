@@ -6,9 +6,7 @@ import distributed.systems.distributed.document.search.backend.networking.OnRequ
 import distributed.systems.distributed.document.search.backend.model.Result;
 import distributed.systems.distributed.document.search.backend.model.Task;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
@@ -43,17 +41,22 @@ public class SearchWorker implements OnRequestCallBack {
     private List<String> parseWordsFromDocuments(String document) {
         try {
             ClassLoader classLoader = SearchWorker.class.getClassLoader();
-            URL resource = classLoader.getResource(document);
+            InputStream bufferedReader = classLoader.getResourceAsStream(document);
 
-            FileReader fileReader = new FileReader(resource.getFile());
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            List<String> lines = bufferedReader.lines().collect(Collectors.toList());
-            List<String> documentTerms = TFIDF.getWordsFromLines(lines);
+            List<String> documentTerms = TFIDF.getWordsFromLine(readAllBytes(bufferedReader));
             return documentTerms;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return Collections.emptyList();
+    }
+
+    private String readAllBytes(InputStream requestBody) throws IOException {
+        byte message[] = new byte[requestBody.available()];
+        requestBody.read(message);
+        return new String(message);
     }
 
     @Override
